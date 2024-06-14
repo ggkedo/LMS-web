@@ -144,39 +144,6 @@ async function listTable(tableName, tableStructure, filter=null)
     }
 };
 
-async function filterTable(tableName, tableStructure, filter)
-{
-    const ps = new db.PreparedStatement();
-    var sql = "SELECT * FROM " + tableName + " WHERE ";
-    for(var key of Object.keys(filter))
-    {
-        if(tableStructure[key])
-        {
-            ps.input(key, tableStructure[key]);
-            sql += key + " = @" + key + " AND ";
-        }
-        else
-        {
-            return {result: null, error: 'Invalid column name'};
-        }        
-    }
-    sql = sql.slice(0, -5);
-    
-    await ps.prepare(sql);
-    try
-    {
-        result = await ps.execute(filter);
-        ps.unprepare();
-        //console.log(result.recordset);
-        return {result: result.recordset, error: null};
-    }
-    catch (e)
-    {
-        console.log(e.message)
-        return {result: null, error: e.message};
-    }
-};
-
 async function insertRow(tableName, tableStructure, data)
 {
     const ps = new db.PreparedStatement();
@@ -192,7 +159,11 @@ async function insertRow(tableName, tableStructure, data)
         }
         else
         {
-            return {result: null, error: 'Invalid column name'};
+            return {
+                status: 400,
+                error: 'Invalid column name',
+                body: {} 
+            };
         }        
     };
 
@@ -205,11 +176,19 @@ async function insertRow(tableName, tableStructure, data)
     {
         result = await ps.execute(data);
         ps.unprepare();
-        return {inserted: result.recordset[0].ID, error: null};
+        return {
+            status: 200,
+            error: false,
+            body: {inserted: result.recordset[0].ID} 
+        };
     }
     catch (e)
     {
-        return {inserted: null, error: e.message};
+        return {
+            status: 500,
+            error: e.message,
+            body: {} 
+        };
     }
 };
 
@@ -224,11 +203,19 @@ async function deleteRow(tableName, id)
     {
         await ps.execute({ID: id});
         ps.unprepare();
-        return {deleted: id, error: null};
+        return {
+            status: 200,
+            error: false,
+            body: {deleted: id} 
+        };
     }
     catch (e)
     {
-        return {deleted: null, error: e.message};
+        return {
+            status: 500,
+            error: e.message,
+            body: {} 
+        };
     }  
 };
 
@@ -245,7 +232,11 @@ async function updateRow(tableName, tableStructure, id, data)
         }
         else
         {
-            return {result: null, error: 'Invalid column name'};
+            return {
+                status: 400,
+                error: 'Invalid column name',
+                body: {} 
+            };
         }        
     };
     sql = sql.slice(0, -2) + " WHERE ID = @ID";
@@ -257,12 +248,31 @@ async function updateRow(tableName, tableStructure, id, data)
     {
         result = await ps.execute(data);
         ps.unprepare();
-        return {updated: data, error: null};
+        return {
+            status: 200,
+            error: false,
+            body: {updated: data} 
+        };
     }
     catch (e)
     {
-        return {updated: null, error: e.message};
+        return {
+            status: 500,
+            error: e.message,
+            body: {} 
+        };
     };
+};
+
+function sendResponse(response, result)
+{
+    response.writeHead(result.status, 
+    {
+        'Content-Type': 'application/json;charset=utf8',
+        'access-control-allow-origin': '*'
+    });
+    response.write(JSON.stringify(result));
+    response.send();
 };
 
 app.get("/", (req, res) =>
@@ -273,194 +283,48 @@ app.get("/", (req, res) =>
 //Projects table operations
 app.get("/list-projects", (req, res) =>
 {
-    /*
-    res.writeHead(200, 
-        {
-            'Content-Type': 'application/json;charset=utf8',
-            'access-control-allow-origin': '*'
-        });
-    */
-
-    const filter = req.body;
+    //const filter = req.body;
     const tableStructure = dbTableStructure.Samples;
 
-    listTable('Projects', tableStructure, filter)
-    .then(result => res.status(result.status).json(result));
-
-    /*
-    var sql = "SELECT * FROM Projects";
-    db.query(sql, (err, result) =>
-    {
-        var json = JSON.stringify(result.recordset);
-        res.write(json);
-        res.send();
-    });
-    */
+    listTable('Projects', tableStructure)
+    .then(result => sendResponse(res, result));
 });
 
 app.post('/add-project/', (req, res) =>
 {
-    try
-    {
-        var data = req.body;
-        //console.log(data);
+    const tableStructure = dbTableStructure.Projects;
+    const data = req.body;
 
-        if(!data.name || !data.company)
-        {
-            res.status(400).json({message: 'Invalid data'});
-        }
-        else
-        {
-            var insertValues = 
-            {
-                name: data.name || null,
-                company: data.company || null,
-                managerEmail: data.managerEmail || null,
-                groupEmail: data.groupEmail || null,
-                sendEmail: data.sendEmail || false
-            };
-
-            //console.log(insertValues);
-
-            const ps = new db.PreparedStatement();
-            ps.input('name', db.VarChar(20));
-            ps.input('company', db.VarChar(10));
-            ps.input('managerEmail', db.VarChar(30));
-            ps.input('groupEmail', db.VarChar(30));
-            ps.input('sendEmail', db.Bit);
-
-            ps.prepare('INSERT INTO Projects (Name, Company, ManagerEmail, GroupEmail, SendEmailByDefault) OUTPUT inserted.ID VALUES (@name, @company, @managerEmail, @groupEmail, @sendEmail)', e => 
-            {
-                ps.execute(insertValues, (e, result) =>
-                {
-                    if(e)
-                    {
-                        res.status(500).json({message: 'Failed to save data'});
-                        console.log(e.message);
-                    }
-                    else
-                    {
-                        console.log(result);
-                        res.status(200).json(
-                        {
-                            message: 'Data saved', 
-                            data: insertValues,
-                            id: result.recordset[0].ID
-                        });
-                        ps.unprepare(e => {});
-                    }
-                });
-            });
-
-
-
-        }
-    }
-    catch (error)
-    {
-        res.status(500).json({message: 'Internal server error'});
-        console.log(error.message);
-    }
+    insertRow('Projects', tableStructure, data)
+    .then(result => sendResponse(res, result));
 });
 
 app.post('/update-project/:id', (req, res) =>
 {
     var data = req.body;
-
+    const id = req.params.id;
     const tableStructure = dbTableStructure.Projects;
-    const ps = new db.PreparedStatement();
-    var sql = "UPDATE Projects SET ";
-    for(var key of Object.keys(data))
-    {
-        if(tableStructure[key])
-        {
-            ps.input(key, tableStructure[key]);
-            sql += key + " = @" + key + ", ";
-            //console.log(key + ' -> ' + key);
-        }
-    };
 
-    sql = sql.slice(0, -2) + " WHERE ID = @ID";
-    
-    ps.input("ID", db.Int())
-    data["ID"] = req.params.id;
-    ps.prepare(sql, e => 
-    {
-        if(e)
-        {
-            res.status(500).json({message: 'Invalid data given'});
-            console.log(e.message);
-        }
-        else
-        {        
-            ps.execute(data, e =>
-            {
-                if(e)
-                {
-                    res.status(500).json({message: 'Failed to update project details'});
-                    console.log(e.message);
-                }
-                else
-                {
-                    res.status(200).json(
-                        {
-                            message: 'Project details updated',
-                            data: data
-                        });
-                    ps.unprepare(e=>{});
-                }
-            });
-        }
-    });
+    updateRow('Projects', tableStructure, id, data)
+    .then(result => sendResponse(res, result));
 });
 
 app.get('/delete-project/:id', (req, res) =>
 {
     const id = req.params.id;
-    const ps = new db.PreparedStatement();
-    ps.input("ID", db.Int());
-    ps.prepare("DELETE FROM Projects WHERE ID = @ID", e =>
-    {
-        if(!e)
-        {
-            ps.execute({ID: id}, e =>
-            {
-                if(e)
-                {
-                    res.status(500).json({message: 'Failed to delete project', ID: id, error: e.message});
-                    console.log(e.message);
-                }
-                else
-                {
-                    ps.unprepare(e=>{});
-                    res.status(200).json({message: 'Project deleted', ID: id})
-                }                
-            });
-        }
-        else
-        {
-            res.status(500).json({message: 'Error executing command'});
-            console.log(e.message);
-        }
-    });
+    const tableStructure = dbTableStructure.Projects;
+
+    deleteRow('Projects', id)
+    .then(result => sendResponse(res, result));
 });
 
 //Requests table operations
 app.get('/list-requests', (req, res) =>
 {
-    res.writeHead(200, 
-        {
-            'Content-Type': 'application/json;charset=utf8',
-            'access-control-allow-origin': '*'
-        });
+    const tableStructure = dbTableStructure.Requests;
 
-    var sql = "SELECT * FROM Requests";
-    db.query(sql, (err, result) =>
-    {
-        var json = JSON.stringify(result.recordset);
-        res.write(json);
-        res.send();
-    });
+    listTable('Requests', tableStructure)
+    .then(result => sendResponse(res, result));
 });
 
 app.post('/list-requests', (req, res) =>
@@ -468,58 +332,23 @@ app.post('/list-requests', (req, res) =>
     const filter = req.body.filter;
     const tableStructure = dbTableStructure.Requests;
 
-    filterTable('Requests', tableStructure, filter)
-    .then(result => 
-        {
-            if(result.error)
-            {
-                res.status(500).json({message: result.error});
-            }
-            else
-            {
-                res.status(200).json({message: 'A-OK', records: result.result});
-            }
-        });
+    listTable('Requests', tableStructure, filter)
+    .then(result => sendResponse(res, result));
 });
 
 app.post('/add-request', (req, res) =>
 {
-    const data = req.body;
     const tableStructure = dbTableStructure.Requests;
+    const data = req.body;
 
     insertRow('Requests', tableStructure, data)
-    .then(result =>
-    {
-        if(result.error)
-        {
-            res.status(500).json({message: result.error});
-        }
-        else
-        {
-            res.status(200).json(
-            {
-                message: 'Row inserted', 
-                id: result.inserted,
-                data: data
-            });
-        }
-    });
+    .then(result => sendResponse(res, result));
 });
 
 app.get('/delete-request/:id', (req, res) =>
 {
     deleteRow('Requests', req.params.id)
-    .then(result =>
-        {
-            if(result.error)
-            {
-                res.status(500).json({message: result.error});
-            }
-            else
-            {
-                res.status(200).json({message: 'Row deleted', id: req.params.id});
-            }
-        });
+    .then(result => sendResponse(res, result));
 });
 
 app.post('/update-request/:id', (req, res) =>
@@ -529,17 +358,7 @@ app.post('/update-request/:id', (req, res) =>
     var data = req.body;
 
     updateRow('Requests', tableStructure, id, data)
-    .then(result =>
-    {
-        if(result.error)
-        {
-            res.status(500).json({message: result.error});
-        }
-        else
-        {
-            res.status(200).json({message: 'Record updated', data: result.updated});
-        }
-    });
+    .then(result => sendResponse(res, result));
     
 });
 
@@ -550,7 +369,7 @@ app.post('/list-samples', (req, res) =>
     const tableStructure = dbTableStructure.Samples;
 
     listTable('Samples', tableStructure, filter)
-    .then(result => res.status(result.status).json(result));
+    .then(result => sendResponse(res, result));
 });
 
 async function Server()
