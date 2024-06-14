@@ -127,7 +127,7 @@ async function listTable(tableName, tableStructure, filter=null)
     }
 };
 
-async function insertRow(tableName, tableStructure, data)
+async function insertRecord(tableName, tableStructure, data)
 {
     const ps = new db.PreparedStatement();
     var sql1 = "INSERT INTO " + tableName + " (";
@@ -175,7 +175,7 @@ async function insertRow(tableName, tableStructure, data)
     }
 };
 
-async function deleteRow(tableName, id)
+async function deleteRecord(tableName, id)
 {
     const ps = new db.PreparedStatement();
     const sql = "DELETE FROM " + tableName + " WHERE ID = @ID";
@@ -202,7 +202,7 @@ async function deleteRow(tableName, id)
     }  
 };
 
-async function updateRow(tableName, tableStructure, id, data)
+async function updateRecord(tableName, tableStructure, id, data)
 {
     const ps = new db.PreparedStatement();
     var sql = "UPDATE " + tableName + " SET ";
@@ -300,7 +300,7 @@ app.post('/add-record', (req, res) =>
     }
     else
     {
-        insertRow(tableName, tableStructure, data)
+        insertRecord(tableName, tableStructure, data)
         .then(result => sendResponse(res, result));
     }
 })
@@ -322,7 +322,7 @@ app.post('/update-record/:id', (req, res) =>
     }
     else
     {
-        updateRow(tableName, tableStructure, id, data)
+        updateRecord(tableName, tableStructure, id, data)
         .then(result => sendResponse(res, result));
     }
 })
@@ -343,7 +343,7 @@ app.post('/delete-record/:id', (req, res) =>
     }
     else
     {
-        deleteRow(tableName, id)
+        deleteRecord(tableName, id)
         .then(result => sendResponse(res, result));
     }
 })
