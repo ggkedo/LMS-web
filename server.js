@@ -27,7 +27,7 @@ const dbTableStructure =
         ManagerEmail: db.NVarChar(30),
         GroupEmail: db.NVarChar(30),
         Company: db.NVarChar(10),
-        sendEmailByDefault: db.Bit()
+        SendEmailByDefault: db.Bit()
     },
     Requests:
     {
@@ -57,23 +57,6 @@ const dbTableStructure =
         SampleName: db.NVarChar(20),
         Created: db.DateTime2(7)
     }
-}
-
-async function connectToSqlServer()
-{
-    try
-    {
-        await db.connect(sqlConfig);
-    }
-    catch (error)
-    {
-        console.error('Error:', error.message);
-    }
-};
-
-function isEmpty(obj)
-{
-    return Object.keys(obj).length === 0;
 }
 
 async function listTable(tableName, tableStructure, filter=null)
@@ -280,97 +263,90 @@ app.get("/", (req, res) =>
     res.status(200).json({message: 'API server running'});
 });
 
-//Projects table operations
-app.get("/list-projects", (req, res) =>
+app.post('/list-table', (req, res) =>
 {
-    //const filter = req.body;
-    const tableStructure = dbTableStructure.Samples;
-
-    listTable('Projects', tableStructure)
-    .then(result => sendResponse(res, result));
-});
-
-app.post('/add-project/', (req, res) =>
-{
-    const tableStructure = dbTableStructure.Projects;
-    const data = req.body;
-
-    insertRow('Projects', tableStructure, data)
-    .then(result => sendResponse(res, result));
-});
-
-app.post('/update-project/:id', (req, res) =>
-{
-    var data = req.body;
-    const id = req.params.id;
-    const tableStructure = dbTableStructure.Projects;
-
-    updateRow('Projects', tableStructure, id, data)
-    .then(result => sendResponse(res, result));
-});
-
-app.get('/delete-project/:id', (req, res) =>
-{
-    const id = req.params.id;
-    const tableStructure = dbTableStructure.Projects;
-
-    deleteRow('Projects', id)
-    .then(result => sendResponse(res, result));
-});
-
-//Requests table operations
-app.get('/list-requests', (req, res) =>
-{
-    const tableStructure = dbTableStructure.Requests;
-
-    listTable('Requests', tableStructure)
-    .then(result => sendResponse(res, result));
-});
-
-app.post('/list-requests', (req, res) =>
-{
+    const tableName = req.body.table;
+    const tableStructure = dbTableStructure[tableName];
     const filter = req.body.filter;
-    const tableStructure = dbTableStructure.Requests;
 
-    listTable('Requests', tableStructure, filter)
-    .then(result => sendResponse(res, result));
-});
+    if(!tableName) 
+    {
+        sendResponse(res, {status: 400, error: 'Table required', body: {}});
+    }
+    else if (!tableStructure)
+    {
+        sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
+    }
+    else
+    {
+        listTable(tableName, tableStructure, filter)
+        .then(result => sendResponse(res, result));
+    }
+})
 
-app.post('/add-request', (req, res) =>
+app.post('/add-record', (req, res) =>
 {
-    const tableStructure = dbTableStructure.Requests;
-    const data = req.body;
+    const tableName = req.body.table;
+    const tableStructure = dbTableStructure[tableName];
+    var data = req.body.data;
 
-    insertRow('Requests', tableStructure, data)
-    .then(result => sendResponse(res, result));
-});
+    if(!tableName) 
+    {
+        sendResponse(res, {status: 400, error: 'Table required', body: {}});
+    }
+    else if (!tableStructure)
+    {
+        sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
+    }
+    else
+    {
+        insertRow(tableName, tableStructure, data)
+        .then(result => sendResponse(res, result));
+    }
+})
 
-app.get('/delete-request/:id', (req, res) =>
+app.post('/update-record/:id', (req, res) =>
 {
-    deleteRow('Requests', req.params.id)
-    .then(result => sendResponse(res, result));
-});
-
-app.post('/update-request/:id', (req, res) =>
-{
-    const tableStructure = dbTableStructure.Requests;
     const id = req.params.id;
-    var data = req.body;
+    const tableName = req.body.table;
+    const tableStructure = dbTableStructure[tableName];
+    var data = req.body.data;
 
-    updateRow('Requests', tableStructure, id, data)
-    .then(result => sendResponse(res, result));
-    
-});
+    if(!tableName) 
+    {
+        sendResponse(res, {status: 400, error: 'Table required', body: {}});
+    }
+    else if (!tableStructure)
+    {
+        sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
+    }
+    else
+    {
+        updateRow(tableName, tableStructure, id, data)
+        .then(result => sendResponse(res, result));
+    }
+})
 
-//Samples table operations
-app.post('/list-samples', (req, res) =>
+app.post('/delete-record/:id', (req, res) =>
 {
-    const filter = req.body;
-    const tableStructure = dbTableStructure.Samples;
+    const id = req.params.id;
+    const tableName = req.body.table;
+    const tableStructure = dbTableStructure[tableName];
 
-    listTable('Samples', tableStructure, filter)
-    .then(result => sendResponse(res, result));
-});
+    if(!tableName) 
+    {
+        sendResponse(res, {status: 400, error: 'Table required', body: {}});
+    }
+    else if (!tableStructure)
+    {
+        sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
+    }
+    else
+    {
+        deleteRow(tableName, id)
+        .then(result => sendResponse(res, result));
+    }
+})
 
 async function Server()
 {
