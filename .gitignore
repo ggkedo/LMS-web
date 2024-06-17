@@ -50,7 +50,6 @@ Thumbs.db
 
 *.jpg
 *.csv
-*.html
 
 # env settings
 *.env
