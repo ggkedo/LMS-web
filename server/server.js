@@ -3,8 +3,8 @@ const db = require('mssql');
 const express = require('express');
 const postParser = require('body-parser');
 const app = express();
-//app.use(postParser.urlencoded({extended: true}));
-app.use(postParser.json());
+app.use(postParser.urlencoded({extended: true}));
+//app.use(postParser.json());
 
 const sqlConfig = {
     server: process.env.DB_SERVER,
@@ -249,10 +249,12 @@ async function updateRecord(tableName, tableStructure, id, data)
 
 function sendResponse(response, result)
 {
+    console.log('Serving request...');
+    console.log(result);
     response.writeHead(result.status, 
     {
         'Content-Type': 'application/json;charset=utf8',
-        'access-control-allow-origin': '*'
+        'Access-Control-Allow-Origin': '*'
     });
     response.write(JSON.stringify(result));
     response.send();
