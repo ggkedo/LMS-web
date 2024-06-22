@@ -1,3 +1,8 @@
+*
+{
+    margin: 0;
+}
+
 /* The switch - the box around the slider */
 .switch {
     position: relative;
@@ -59,4 +64,39 @@
   
   .slider.round:before {
     border-radius: 50%;
+  }
+
+  header
+  {
+    margin-bottom: 10px;
+  }
+
+  header h1
+  {
+    text-align: center;
+    background: gray;
+    height: 50px;
+    padding-top: 3%;
+    padding-bottom: 3%;
+  }
+
+  .search-bar
+  {
+    width: 50%;
+    padding-left: 25%;
+    padding-right: 25%;
+    text-align: center;
+  }
+
+  .container
+  {
+    width: 70%;
+    padding-left: 15%;
+  }
+
+  .measurement-card
+  {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
   }
