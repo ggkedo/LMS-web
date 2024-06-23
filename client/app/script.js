@@ -1,8 +1,8 @@
 //const { encode } = require("punycode");
+const API_ROOT = "http://192.168.0.99:3000";
 
-async function displayProjects()
+async function sendPostRequest(endpoint, details)
 {
-    var details = {'table': 'Projects'};
     var formBody = [];
     for(var property in details)
     {
@@ -11,8 +11,7 @@ async function displayProjects()
         formBody.push(encodedKey + "=" + encodedValue);
     };
     formBody = formBody.join("&");
-    console.log(formBody);
-    const response = await fetch("http://10.0.1.70:3000/list-table",
+    const response = await fetch(API_ROOT + "/" + endpoint,
         {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
@@ -20,8 +19,21 @@ async function displayProjects()
             mode: 'cors'
         }
     );
-    const projects = await response.json();
+    return await response.json();
 }
 
-console.log('Script.js running...');
+async function displayProjects()
+{
+    const details = {'table': 'Projects'};
+    const projects = await sendPostRequest("list-table", details);
+    
+    var data = projects['body']['data'];
+    for(var project of data)
+    {
+        űconsole.log(project['Name'], project['Company']);
+    }
+
+}
+
+//console.log('Script.js running...');
 displayProjects();
