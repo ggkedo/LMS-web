@@ -249,7 +249,7 @@ async function updateRecord(tableName, tableStructure, id, data)
 
 function sendResponse(response, result)
 {
-    console.log('Serving request...');
+    console.log(new Date().toISOString() + ' Serving request...');
     console.log(result);
     response.writeHead(result.status, 
     {
@@ -262,7 +262,7 @@ function sendResponse(response, result)
 
 app.get("/", (req, res) =>
 {
-    res.status(200).json({message: 'API server running'});
+    sendResponse(res, {status: 200, error: false, body: {message: 'API server running'}});
 });
 
 app.post('/list-table', (req, res) =>
@@ -349,6 +349,11 @@ app.post('/delete-record/:id', (req, res) =>
         .then(result => sendResponse(res, result));
     }
 })
+
+app.get('/*', (req, res) =>
+{
+    sendResponse(res, {status: 400, error: 'Bad request', body: null});
+});
 
 async function Server()
 {
