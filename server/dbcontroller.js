@@ -1,4 +1,17 @@
-var db = null;
+const db = require('mssql');
+
+var tableStructure;
+var sqlConfig = {
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PWD,
+    port: process.env.DB_PORT,
+    options:
+    {
+        encrypt: false
+    }
+};
 
 async function getDB(sqlConfig)
 {
@@ -9,7 +22,7 @@ async function getDB(sqlConfig)
     return db;
 };
 
-exports.initDBStructure = function (db)
+initDBStructure = function (db)
 {
     const dbTableStructure = 
     {
@@ -51,21 +64,10 @@ exports.initDBStructure = function (db)
             Created: db.DateTime2(7)
         }
     }
+    return dbTableStructure;
 };
 
-exports.sqlConfig = sqlConfig = {
-    server: process.env.DB_SERVER,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PWD,
-    port: process.env.DB_PORT,
-    options:
-    {
-        encrypt: false
-    }
-};
-
-exports.listTable = async function (tableName, tableStructure, filter=null)
+exports.listTable = async function (tableName, filter=null)
 {
     if(!filter)
     {
@@ -133,7 +135,7 @@ exports.listTable = async function (tableName, tableStructure, filter=null)
     }
 };
 
-exports.insertRecord = async function (tableName, tableStructure, data)
+exports.insertRecord = async function (tableName, data)
 {
     const ps = new db.PreparedStatement();
     var sql1 = "INSERT INTO " + tableName + " (";
@@ -208,7 +210,7 @@ exports.deleteRecord = async function (tableName, id)
     }  
 };
 
-exports.updateRecord = async function (tableName, tableStructure, id, data)
+exports.updateRecord = async function (tableName, id, data)
 {
     const ps = new db.PreparedStatement();
     var sql = "UPDATE " + tableName + " SET ";
@@ -253,9 +255,19 @@ exports.updateRecord = async function (tableName, tableStructure, id, data)
     };
 };
 
-exports.initDB = async function(sqlConfig)
+exports.getDBstructure = function()
 {
-    const db = require('mssql');   
-    await db.connect(sqlConfig);
-    return db;
+    if(!tableStructure)
+    {
+       tableStructure = initDBStructure(db); 
+    }
+    return tableStructure;
 }
+
+initDB = async function(sqlConfig)
+{ 
+    await db.connect(sqlConfig);
+    var tableStructure = await initDBStructure(db);
+}
+
+initDB(sqlConfig);

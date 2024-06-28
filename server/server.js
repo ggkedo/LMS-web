@@ -1,9 +1,8 @@
 require('dotenv').config();
-const dbcontroller = require('./database');
-
+const dbcontroller = require('./dbcontroller');
+const dbTableStructure = dbcontroller.getDBstructure();
 const express = require('express');
 const postParser = require('body-parser');
-const { sqlConfig, initDBStructure } = require('./database');
 const app = express();
 app.use(postParser.urlencoded({extended: true}));
 //app.use(postParser.json());
@@ -42,7 +41,8 @@ app.post('/list-table', (req, res) =>
     }
     else
     {
-        listTable(tableName, tableStructure, filter)
+        //listTable(tableName, tableStructure, filter)
+        dbcontroller.listTable(tableName, filter)
         .then(result => sendResponse(res, result));
     }
 })
@@ -63,7 +63,7 @@ app.post('/add-record', (req, res) =>
     }
     else
     {
-        insertRecord(tableName, tableStructure, data)
+        insertRecord(tableName, data)
         .then(result => sendResponse(res, result));
     }
 })
@@ -85,7 +85,7 @@ app.post('/update-record/:id', (req, res) =>
     }
     else
     {
-        updateRecord(tableName, tableStructure, id, data)
+        updateRecord(tableName, id, data)
         .then(result => sendResponse(res, result));
     }
 })
@@ -118,8 +118,6 @@ app.get('/*', (req, res) =>
 
 async function Server()
 {
-    const db = await dbcontroller.initDB(sqlConfig);
-    const dbTableStructure = dbcontroller.initDBStructure(db);
     app.listen(process.env.SVR_PORT);
 };
 
