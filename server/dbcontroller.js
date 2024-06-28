@@ -62,6 +62,69 @@ initDBStructure = function (db)
             SampleSubLocation: db.NVarChar(20),
             SampleName: db.NVarChar(20),
             Created: db.DateTime2(7)
+        },
+        Measurements:
+        {
+            ID: db.Int(),
+            SampleId: db.Int(),
+            Result: db.NVarChar(50),
+            MeasurementDate: db.DateTime2(7),
+            MeasuredByEmail: db.NVarChar(50),
+            CostMaterial: db.Real(),
+            CostInternal: db.Real(),
+            CostExternal: db.Real(),
+            Created: db.DateTime2(7)
+        },
+        Methods:
+        {
+            ID: db.Int(),
+            FullName: db.NVarChar(50),
+            ShortName: db.NVarChar(50),
+            Category: db.NVarChar(50),
+            Method: db.NVarChar(50),
+            Description: db.NVarChar(100),
+            CostMaterial: db.Real(),
+            CostInternal: db.Real(),
+            CostExternal: db.Real(),
+            Created: db.DateTime2(7),
+            Modified: db.DateTime2(7)
+        },
+        MethodRecipes:
+        {
+            ID: db.Int(),
+            MeasurementId: db.Int(),
+            MaterialId: db.Int(),
+            MaterialQty: db.Real(),
+            EquipmentId: db.Int(),
+            EquipmentUsage: db.Real(),
+            WorkTechnician: db.Real(),
+            WorkEngineer: db.Real(),
+            Created: db.DateTime2(7),
+            Modified: db.DateTime2(7)
+        },
+        Materials:
+        {
+            ID: db.Int(),
+            Name: db.NVarChar(50),
+            UnitPerPackage: db.Int(),
+            Unit: db.NVarChar(50),
+            PackagePriceNet: db.Real(),
+            Discount: db.Real(),
+            UnitPriceNet: db.Real(),
+            Created: db.DateTime2(7),
+            Modified: db.DateTime2(7)
+        },
+        Equipment:
+        {
+            ID: db.Int(),
+            Name: db.NVarChar(50),
+            PurchasePrice: db.Real(),
+            DepricationSpanYears: db.Real(),
+            DailyUsageHours: db.Real(),
+            Wattage: db.Int(),
+            FixedCosts: db.Real(),
+            Created: db.DateTime2(7),
+            Modified: db.DateTime2(7)
         }
     }
     return dbTableStructure;
