@@ -1,4 +1,3 @@
-//const { encode } = require("punycode");
 const API_ROOT = "http://192.168.0.99:3000";
 
 async function sendPostRequest(endpoint, details)
@@ -22,17 +21,19 @@ async function sendPostRequest(endpoint, details)
     return await response.json();
 }
 
-async function displayProjects()
+async function getProjects()
 {
     const details = {'table': 'Projects'};
     const projects = await sendPostRequest("list-table", details);
     
     var data = projects['body']['data'];
+    return data;
+    /*
     for(var project of data)
     {
-        űconsole.log(project['Name'], project['Company']);
+        console.log(project['Name'], project['Company']);
     }
-
+    */
 }
 
 //console.log('Script.js running...');
