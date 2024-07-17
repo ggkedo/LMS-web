@@ -159,9 +159,10 @@ exports.listTable = async function (tableName, filter=null)
         var sql = "SELECT * FROM " + tableName + " WHERE ";
         for(var key of Object.keys(filter))
         {
-            if(tableStructure[key])
+            //console.log(tableStructure[tableName][key]);
+            if(tableStructure[tableName][key])
             {
-                ps.input(key, tableStructure[key]);
+                ps.input(key, tableStructure[tableName][key]);
                 sql += key + " = @" + key + " AND ";
             }
             else

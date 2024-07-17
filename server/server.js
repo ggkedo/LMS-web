@@ -29,7 +29,7 @@ app.post('/list-table', (req, res) =>
 {
     const tableName = req.body.table;
     const tableStructure = dbTableStructure[tableName];
-    const filter = req.body.filter;
+    const filter = req.body.filter ? JSON.parse(req.body.filter) : null;
 
     if(!tableName) 
     {
