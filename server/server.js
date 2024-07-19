@@ -47,11 +47,38 @@ app.post('/list-table', (req, res) =>
     }
 })
 
+app.post('/get-record', (req, res) =>
+{
+    const tableName = req.body.table;
+    const tableStructure = dbTableStructure[tableName];
+    const recordID = req.body.ID;
+
+    if(!tableName) 
+    {
+        sendResponse(res, {status: 400, error: 'Table required', body: {}});
+    }
+    else if (!tableStructure)
+    {
+        sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
+    }
+    else if (!recordID)
+    {
+        sendResponse(res, {status: 400, error: 'Record ID required', body: {}});
+    }
+    else
+    {
+        dbcontroller.getRecord(tableName, recordID)
+        .then(result => sendResponse(res, result));
+    }
+})
+
 app.post('/add-record', (req, res) =>
 {
     const tableName = req.body.table;
     const tableStructure = dbTableStructure[tableName];
-    var data = req.body.data;
+    var data = req.body.data ? JSON.parse(req.body.data) : null;
+    //var data = req.body;
+    console.log(data);
 
     if(!tableName) 
     {
@@ -63,7 +90,7 @@ app.post('/add-record', (req, res) =>
     }
     else
     {
-        insertRecord(tableName, data)
+        dbcontroller.insertRecord(tableName, data)
         .then(result => sendResponse(res, result));
     }
 })
@@ -85,7 +112,7 @@ app.post('/update-record/:id', (req, res) =>
     }
     else
     {
-        updateRecord(tableName, id, data)
+        dbcontroller.updateRecord(tableName, id, data)
         .then(result => sendResponse(res, result));
     }
 })
@@ -106,7 +133,7 @@ app.post('/delete-record/:id', (req, res) =>
     }
     else
     {
-        deleteRecord(tableName, id)
+        dbcontroller.deleteRecord(tableName, id)
         .then(result => sendResponse(res, result));
     }
 })

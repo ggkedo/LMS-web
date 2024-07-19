@@ -169,7 +169,7 @@ exports.listTable = async function (tableName, filter=null)
             {
                 return {
                     status: 400,
-                    error: 'Invalid column name',
+                    error: 'Invalid column name: ' + key,
                     body: {data: []} 
                 };
             }        
@@ -189,15 +189,40 @@ exports.listTable = async function (tableName, filter=null)
         }
         catch (e)
         {
-            console.log(e.message)
             return {
-                status: 200,
+                status: 500,
                 error: e.message,
                 body: {data: []} 
             };
         }
     }
 };
+
+exports.getRecord = async function (tableName, recordID)
+{
+    const ps = new db.PreparedStatement();
+    var sql = "SELECT * FROM " + tableName + " WHERE ID = @ID";
+    ps.input("ID", db.Int());
+    await ps.prepare(sql);
+    try
+    {
+        result = await ps.execute({"ID": recordID});
+        ps.unprepare();
+        return {
+            status: 200,
+            error: false,
+            body: {data: result.recordset}
+        };
+    }
+    catch (e)
+    {
+        return {
+            status: 500,
+            error: e.message,
+            body: {data: []}
+        }
+    }  
+}
 
 exports.insertRecord = async function (tableName, data)
 {
@@ -206,9 +231,9 @@ exports.insertRecord = async function (tableName, data)
     var sql2 = "VALUES (";
     for(var key of Object.keys(data))
     {
-        if(tableStructure[key])
+        if(tableStructure[tableName][key])
         {
-            ps.input(key, tableStructure[key]);
+            ps.input(key, tableStructure[tableName][key]);
             sql1 += key + ", ";
             sql2 += "@" + key + ", ";
         }
@@ -216,7 +241,7 @@ exports.insertRecord = async function (tableName, data)
         {
             return {
                 status: 400,
-                error: 'Invalid column name',
+                error: 'Invalid column name: ' + key,
                 body: {} 
             };
         }        
@@ -280,16 +305,16 @@ exports.updateRecord = async function (tableName, id, data)
     var sql = "UPDATE " + tableName + " SET ";
     for(var key of Object.keys(data))
     {
-        if(tableStructure[key])
+        if(tableStructure[tableName][key])
         {
-            ps.input(key, tableStructure[key]);
+            ps.input(key, tableStructure[tableName][key]);
             sql += key + " = @" + key + ", ";
         }
         else
         {
             return {
                 status: 400,
-                error: 'Invalid column name',
+                error: 'Invalid column name: ' + key,
                 body: {} 
             };
         }        
