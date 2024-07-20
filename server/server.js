@@ -102,7 +102,7 @@ app.post('/update-record/:id', (req, res) =>
     const id = req.params.id;
     const tableName = req.body.table;
     const tableStructure = dbTableStructure[tableName];
-    var data = req.body.data;
+    var data = req.body.data ? JSON.parse(req.body.data) : null;
 
     if(!tableName) 
     {
