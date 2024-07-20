@@ -67,6 +67,7 @@ initDBStructure = function (db)
         {
             ID: db.Int(),
             SampleId: db.Int(),
+            MethodId: db.Int(),
             Result: db.NVarChar(50),
             MeasurementDate: db.DateTime2(7),
             MeasuredByEmail: db.NVarChar(50),
