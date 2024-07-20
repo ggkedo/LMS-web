@@ -47,11 +47,11 @@ app.post('/list-table', (req, res) =>
     }
 })
 
-app.post('/get-record', (req, res) =>
+app.post('/get-record/:id', (req, res) =>
 {
     const tableName = req.body.table;
     const tableStructure = dbTableStructure[tableName];
-    const recordID = req.body.ID;
+    const recordID = req.params.id;
 
     if(!tableName) 
     {
@@ -61,10 +61,12 @@ app.post('/get-record', (req, res) =>
     {
         sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
     }
+    /*
     else if (!recordID)
     {
         sendResponse(res, {status: 400, error: 'Record ID required', body: {}});
     }
+    */
     else
     {
         dbcontroller.getRecord(tableName, recordID)
