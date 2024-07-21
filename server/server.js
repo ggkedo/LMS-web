@@ -47,6 +47,37 @@ app.post('/list-table', (req, res) =>
     }
 })
 
+app.post('/join-tables', (req, res) =>
+{
+    const table1 = req.body.table1;
+    const table2 = req.body.table2;
+    const fields1 = req.body.fields1;
+    const fields2 = req.body.fields2;
+    const key1 = req.body.key1;
+    const key2 = req.body.key2;
+
+    const tableStructure1 = dbTableStructure[table1];
+    const tableStructure2 = dbTableStructure[table2];
+
+    if(!table1 || !table2) 
+    {
+        sendResponse(res, {status: 400, error: 'Table1 and Table2 required', body: {}});
+    }
+    else if (!tableStructure1 || !tableStructure2)
+    {
+        sendResponse(res, {status: 400, error: 'Invalid table name', body: {}});
+    }
+    else if (!key1 || !key2)
+    {
+        sendResponse(res, {status: 400, error: 'Keys required to join on', body: {}});
+    }
+    else
+    {
+        dbcontroller.joinTables(table1, table2, key1, key2, fields1, fields2)
+        .then(result => sendResponse(res, result));
+    }
+})
+
 app.post('/get-record/:id', (req, res) =>
 {
     const tableName = req.body.table;
@@ -141,6 +172,11 @@ app.post('/delete-record/:id', (req, res) =>
 })
 
 app.get('/*', (req, res) =>
+{
+    sendResponse(res, {status: 400, error: 'Bad request', body: null});
+});
+
+app.post('/*', (req, res) =>
 {
     sendResponse(res, {status: 400, error: 'Bad request', body: null});
 });

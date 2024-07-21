@@ -22,6 +22,34 @@ async function getDB(sqlConfig)
     return db;
 };
 
+function createFieldsForJoin(table, fields)
+{
+    if(fields)
+        {
+            fields = fields.split(', ');
+            fields.forEach((element, index, array) => 
+                {
+                    //validate schema
+                    if(tableStructure[table][element])
+                    {
+                        array[index] = table + '.' + element;
+                    }
+                    else
+                    {
+                        throw Error ('Invalid column name: ' + element);
+                    }
+                    
+                })
+            fields = fields.join(', ');
+        }
+    else
+    {
+        fields = table + '.*';
+    }
+
+    return fields;
+}
+
 initDBStructure = function (db)
 {
     const dbTableStructure = 
@@ -151,7 +179,7 @@ exports.listTable = async function (tableName, filter=null)
                 status: 500,
                 error: e.message,
                 body: {data: []} 
-            };;
+            };
         }
     }
     else
@@ -198,6 +226,46 @@ exports.listTable = async function (tableName, filter=null)
         }
     }
 };
+
+exports.joinTables = async function (table1, table2, key1, key2, fields1=null, fields2=null, filter=null)
+{
+    try
+    {
+        fields1 = createFieldsForJoin(table1, fields1);
+        fields2 = createFieldsForJoin(table2, fields2);
+        fields = fields1 + ', ' + fields2;
+    }
+    catch (e)
+    {
+        return {
+            status: 400,
+            error: e.message,
+            body: {data: []} 
+        };
+    }   
+
+    sql = "SELECT " + fields + " FROM " + table1 
+        + " INNER JOIN " + table2 
+        + " ON " + table1 + "." + key1 + " = " + table2 + "." + key2 + ";";
+
+    try
+    { 
+        result = await db.query(sql); 
+        return {
+            status: 200,
+            error: false,
+            body: {data: result.recordset} 
+        };
+    }
+    catch (e)
+    { 
+        return {
+            status: 500,
+            error: e.message,
+            body: {data: []} 
+        };;
+    }
+}
 
 exports.getRecord = async function (tableName, recordID)
 {
