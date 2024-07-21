@@ -229,6 +229,7 @@ exports.listTable = async function (tableName, filter=null)
 
 exports.joinTables = async function (table1, table2, key1, key2, fields1=null, fields2=null, filter=null)
 {
+    //TODO: filtering
     try
     {
         fields1 = createFieldsForJoin(table1, fields1);
