@@ -25,3 +25,14 @@
   }
 }
 ```
+
+## .env
+The app uses server\.env to initialise the DB connection
+```
+DB_USER = username
+DB_PWD = password
+DB_NAME = dbname
+DB_SERVER = db address
+DB_PORT = db port
+SVR_PORT = serverport
+```
