@@ -27,7 +27,7 @@
 ```
 
 ## .env
-The app uses server\.env to initialise the DB connection
+The app uses server\\.env to initialise the DB connection
 ```
 DB_USER = username
 DB_PWD = password
